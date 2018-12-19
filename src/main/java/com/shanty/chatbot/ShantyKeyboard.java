@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-class ShantyKeyboard extends ReplyKeyboardMarkup {
-    ShantyKeyboard() {
+public class ShantyKeyboard extends ReplyKeyboardMarkup {
+    public ShantyKeyboard() {
 
         Properties properties = new Properties();
         try (InputStream is = ShantyKeyboard.class.getClassLoader().getResourceAsStream("keyboard.properties")) {

@@ -1,10 +1,12 @@
 package com.shanty.chatbot;
 
+import com.shanty.chatbot.handler.FAQMessageHandler;
+import com.shanty.chatbot.handler.HelpMessageHandler;
+import com.shanty.chatbot.handler.RulesMessageHandler;
+import com.shanty.chatbot.handler.StartMessageHandler;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.BufferedReader;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 
 public class ShantyBot extends TelegramLongPollingBot {
     private static String token;
+    private static MessageGateway gateway = new MessageGateway();
 
     static {
         InputStream tokenStream = ShantyBot.class.getClassLoader().getResourceAsStream("_token");
@@ -28,6 +31,10 @@ public class ShantyBot extends TelegramLongPollingBot {
             e.printStackTrace();
         }
 
+        gateway.registerHandler(new StartMessageHandler());
+        gateway.registerHandler(new FAQMessageHandler());
+        gateway.registerHandler(new RulesMessageHandler());
+        gateway.registerHandler(new HelpMessageHandler());
     }
 
     @Override
@@ -36,44 +43,11 @@ public class ShantyBot extends TelegramLongPollingBot {
             return;
         }
 
-        Message updateMessage = update.getMessage();
-        if (!updateMessage.hasText()) {
+
+        SendMessage message = gateway.routeMessage(update);
+        if (message == null) {
             return;
         }
-
-        String messageText = updateMessage.getText();
-        long chatId = updateMessage.getChatId();
-        SendMessage message = new SendMessage().setChatId(chatId);
-        switch (messageText) {
-            case "/start":
-                message.setText("Привет. Я твой помощник по комфортному проживанию в Шанти вилле. Чем могу помочь?");
-                ReplyKeyboardMarkup keyboardMarkup = new ShantyKeyboard();
-                message.setReplyMarkup(keyboardMarkup);
-                break;
-
-            /*case "/hideMarkup":
-                message.setText("Keyboard are hidden now");
-                message.setReplyMarkup(new ReplyKeyboardRemove());
-                break;*/
-            case "FAQ":
-                message.setText("https://telegra.ph/FAQ-poleznye-ssylki-10-25");
-                break;
-            case "About":
-                message.setText("https://telegra.ph/SHANTI-VILLA-10-26");
-                break;
-            case "Help":
-                message.setText("Когда нибудь я обязательно помогу тебе! Но не сегодня...");
-                break;
-            /*case "Привет": {
-                SendSticker sticker = new SendSticker();
-                sticker.
-                break;
-            }*/
-
-            default:
-                message.setText("Unknown command: " + messageText);
-        }
-
 
         try {
             execute(message);
